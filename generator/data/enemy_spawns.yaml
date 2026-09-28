@@ -1,0 +1,19 @@
+Pools:
+  common:
+    - { name: E_XXXXXX, parameters: 0xFFFFFF00 }   # Bokoblin
+    - { name: E_YYYYYY, parameters: 0xFFFFFF00 }   # Keese
+    - { name: E_ZZZZZZ, parameters: 0xFFFFFF00 }   # Chu
+
+  flying:
+    - { name: E_YYYYYY, parameters: 0xFFFFFF00 }   # Keese
+
+Spawns:
+  F_SP103:                    # stage name
+    0:                        # room number
+      - pool: common          # which pool this spawn draws from
+        name: E_XXXXXX        # ORIGINAL actor name
+        parameters: 0xFFFFFF00   # ORIGINAL parameters
+        position: { x: 100.0, y: 0.0, z: 200.0 }
+        angle: { x: 0, y: 0, z: 0 }
+        set id: 0xFFFF
+        layers: [0]

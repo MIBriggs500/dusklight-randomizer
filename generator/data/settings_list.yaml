@@ -656,3 +656,21 @@
   Options:
     - "Off": "Ball and Chain will not be required to break webs."
     - "On": "Ball and Chain may be required to break webs."
+
+############################
+##   Randomizer Toggles   ##
+############################
+
+- Name: Items Randomizer
+  Tracker Important: True
+  Default Option: "On"
+  Options:
+    - "Off": "Items will not be randomized."
+    - "On": "Items will be randomized."
+
+- Name: Enemy Randomizer
+  Tracker Important: True
+  Default Option: "Off"
+  Options:
+    - "Off": "Enemies will not be randomized."
+    - "On": "Enemies will be randomized."

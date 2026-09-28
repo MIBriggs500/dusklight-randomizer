@@ -1185,6 +1185,65 @@ void parseObjPatchData(stage_tgsc_data_class& object, const YAML::Node& patchNod
     }
 }
 
+// Patch in enemies here
+static void AddEnemyPatches(randomizer::logic::world::World* world, RandomizerContext& randoData) {
+    if (world->Setting("Enemy Randomizer") != "On") {
+        return;
+    }
+
+    // Separate RNG so enemy results don't change when item/entrance settings change
+    const std::string seedKey = world->GetRandomizer()->GetConfig().GetHash() + "|enemies";
+    std::mt19937_64 rng(randomizer::utility::crc32(seedKey.data(), seedKey.size()));
+
+    const auto data = LOAD_EMBED_YAML(RANDO_DATA_PATH "enemy_spawns.yaml");
+    const auto pools = data["Pools"];
+
+    for (const auto& stageNode : data["Spawns"]) {
+        const auto stageName = stageNode.first.as<std::string>();
+        const int stageId = getStageID(stageName.c_str());
+        if (stageId < 0) {
+            throw std::runtime_error("Unknown stage in enemy_spawns.yaml: " + stageName);
+        }
+
+        for (const auto& roomNode : stageNode.second) {
+            const u8 roomNo = roomNode.first.as<u8>();
+
+            for (const auto& enemyNode : roomNode.second) {
+                const auto poolName = enemyNode["pool"].as<std::string>();
+                const auto pool = pools[poolName];
+                if (!pool.IsSequence() || pool.size() == 0) {
+                    throw std::runtime_error("Unknown or empty enemy pool: " + poolName);
+                }
+
+                // The CRC must be taken over the ORIGINAL actor data, same as object_patches.yaml
+                auto object = parseObjData(enemyNode);
+                size_t objDataSize = RandomizerContext::TGSC_CRC_SIZE;
+                if (object.scale.x == 0 && object.scale.y == 0 && object.scale.z == 0) {
+                    objDataSize = RandomizerContext::ACTR_CRC_SIZE;
+                }
+                const u32 objectCRC32 = getStageObjCRC32(reinterpret_cast<u8*>(&object), objDataSize);
+
+                // Pick a replacement and apply its name/parameters to a copy of the actor
+                std::uniform_int_distribution<size_t> pick(0, pool.size() - 1);
+                parseObjPatchData(object, pool[pick(rng)]);
+
+                RandomizerContext::ActorData actorData{};
+                actorData.bytes.resize(objDataSize);
+                std::memcpy(actorData.bytes.data(), &object, objDataSize);
+
+                for (const auto& layerNode : enemyNode["layers"]) {
+                    u32 key = 0;
+                    key |= stageId << 16;
+                    key |= roomNo << 8;
+                    key |= layerNode.as<u8>();
+                    // Overwrites any existing patch for the same actor
+                    randoData.mObjectPatches[key][objectCRC32] = actorData;
+                }
+            }
+        }
+    }
+}
+
 RandomizerContext WriteSeedData(randomizer::logic::world::World* world) {
     RandomizerContext randoData{};
 

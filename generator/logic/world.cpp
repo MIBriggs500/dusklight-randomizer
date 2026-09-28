@@ -598,8 +598,9 @@ namespace randomizer::logic::world
             auto originalItemName = originalItem->GetName();
 
             // Place all vanilla items
-            // Vanilla Small Keys
-            if ((this->Setting("Small Keys") == "Vanilla" &&
+            if ((this->Setting("Item Randomizer") == "Off") ||
+                // Vanilla Small Keys
+                (this->Setting("Small Keys") == "Vanilla" &&
                  (originalItem->IsDungeonSmallKey() ||
                   utility::str::Contains(originalItemName, "Ordon Pumpkin", "Ordon Cheese"))) ||
                 // Vanilla Big Keys (only include Hyrule Castle Big Key if it has no requirements)
